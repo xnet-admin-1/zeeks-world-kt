@@ -1,6 +1,7 @@
 package ngo.xnet.zeeksworld
 
 import de.fabmax.kool.KoolContext
+import de.fabmax.kool.input.PointerInput
 import de.fabmax.kool.input.InputStack
 import de.fabmax.kool.input.KeyboardInput
 import de.fabmax.kool.input.UniversalKeyCode
@@ -18,8 +19,10 @@ class ZeeksGame {
     val world = World()
     val oliver = Oliver(Vec3f(3f, 2f, 3f))
     val playerPos = MutableVec3f(0f, 2f, 0f)
+    val touchControls = TouchControls()
+    var cameraYaw = 0f
 
-    fun createScene(ctx: KoolContext): Scene {
+    fun createScenes(ctx: KoolContext): List<Scene> {
         val lat = 43.6057601
         val lon = -116.3932135
         val radius = 100.0
@@ -34,7 +37,7 @@ class ZeeksGame {
             world.generateFlat(50)
         }
 
-        return scene {
+        val mainScene = scene {
             val keys = mutableSetOf<Int>()
             val inputHandler = InputStack.InputHandler("fly-cam")
             inputHandler.keyboardListeners += InputStack.KeyboardListener { keyEvents, _ ->
@@ -85,14 +88,22 @@ class ZeeksGame {
                 val dt = Time.deltaT
                 val speed = 8f * dt
 
-                // WASD movement
-                var dx = 0f; var dz = 0f
+                // Touch controls (mobile) + keyboard (desktop)
+
+                var dx = 0f
+                var dz = 0f
+
+                // WASD movement (desktop)
                 if (KEY_W in keys) dz -= speed
                 if (KEY_S in keys) dz += speed
                 if (KEY_A in keys) dx -= speed
                 if (KEY_D in keys) dx += speed
+
                 playerPos.x += dx
                 playerPos.z += dz
+
+                // Touch camera rotation
+                
 
                 // Update Oliver
                 oliver.update(dt, playerPos)
@@ -100,11 +111,23 @@ class ZeeksGame {
                 // Rebuild Oliver mesh
                 oliverMesh.generate { oliver.buildMesh(this) }
 
-                // Third-person camera: behind and above player
-                cam.position.set(playerPos.x, playerPos.y + 8f, playerPos.z + 12f)
+                // Third-person camera: rotates around player
+                val camDist = 15f
+                val camHeight = 10f
+                val rad = Math.toRadians(cameraYaw.toDouble()).toFloat()
+                cam.position.set(
+                    playerPos.x + kotlin.math.sin(rad) * camDist,
+                    playerPos.y + camHeight,
+                    playerPos.z + kotlin.math.cos(rad) * camDist
+                )
                 cam.lookAt.set(playerPos)
             }
         }
+
+        val hud = Hud()
+        val scenes = mutableListOf(mainScene, hud.createScene(ctx))
+        touchControls.createOverlay()?.let { scenes += it }
+        return scenes
     }
 
     companion object {
