@@ -62,17 +62,17 @@ class ZeeksGame {
             onUpdate {
                 val dt = Time.deltaT
                 val speed = 30f * dt
-                val vertRad = Math.toRadians(orbit.verticalRotation).toFloat()
-                val fwdX = -sin(vertRad)
-                val fwdZ = cos(vertRad)
-                val rightX = fwdZ
-                val rightZ = fwdX
+                val yawRad = Math.toRadians(orbit.horizontalRotation.toDouble()).toFloat()
+                val fwdX = -sin(yawRad)
+                val fwdZ = -cos(yawRad)
+                val rightX = cos(yawRad)
+                val rightZ = -sin(yawRad)
 
                 var dx = 0f; var dy = 0f; var dz = 0f
                 if (KEY_W in keys) { dx += fwdX * speed; dz += fwdZ * speed }
                 if (KEY_S in keys) { dx -= fwdX * speed; dz -= fwdZ * speed }
-                if (KEY_A in keys) { dx -= rightX * speed; dz += rightZ * speed }
-                if (KEY_D in keys) { dx += rightX * speed; dz -= rightZ * speed }
+                if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
+                if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
                 if (KEY_Q in keys || KEY_SHIFT in keys) { dy -= speed }
                 if (KEY_E in keys || KEY_SPACE in keys) { dy += speed }
 
