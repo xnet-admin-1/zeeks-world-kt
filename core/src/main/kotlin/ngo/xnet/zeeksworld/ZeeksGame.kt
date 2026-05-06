@@ -88,7 +88,7 @@ class ZeeksGame {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
                     }
                     // Oliver the cat - oversized (5x scale)
-                    val ox = 3f; val oz = 3f; val s = 5f // 5-block scale
+                    val ox = 3f; val oz = 3f; val s = 1f // 5-block scale
                     this.color = de.fabmax.kool.util.Color(1f, 0.6f, 0.2f, 1f) // orange
                     // Body (2x3x2 blocks)
                     for (bx in 0..1) for (by in 0..2) for (bz in 0..1) {
