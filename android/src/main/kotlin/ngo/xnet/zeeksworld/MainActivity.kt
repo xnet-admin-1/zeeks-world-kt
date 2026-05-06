@@ -6,15 +6,15 @@ import de.fabmax.kool.createDefaultKoolContext
 import de.fabmax.kool.platform.KoolContextAndroid
 
 class MainActivity : Activity() {
-    private lateinit var koolCtx: KoolContextAndroid
+    lateinit var koolCtx: KoolContextAndroid
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         koolCtx = createDefaultKoolContext()
         val game = ZeeksGame()
         game.createScenes(koolCtx).forEach { koolCtx.scenes += it }
-        koolCtx.run()
         setContentView(koolCtx.surfaceView)
+        koolCtx.run()
     }
 
     override fun onResume() {

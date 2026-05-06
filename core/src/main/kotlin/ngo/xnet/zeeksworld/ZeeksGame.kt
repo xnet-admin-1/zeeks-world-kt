@@ -26,16 +26,20 @@ class ZeeksGame {
         val lat = 43.6057601
         val lon = -116.3932135
         val radius = 100.0
-        try {
-            println("Fetching OSM data for Zeek's neighborhood...")
-            val osmData = OsmFetcher.fetchArea(lat, lon, radius)
-            println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads, ${osmData.parks.size} parks")
-            WorldGenerator.generate(osmData, lat, lon, world)
-            GeoapifyEnricher.enrichWorld(world, lat, lon)
-        } catch (e: Exception) {
-            println("OSM fetch failed: ${e.message}, using flat world")
-            world.generateFlat(50)
-        }
+        // Fast flat world for immediate display
+        world.generateFlat(50)
+        // Load OSM in background (avoids ANR on Android)
+        Thread {
+            try {
+                println("Fetching OSM data...")
+                val osmData = OsmFetcher.fetchArea(lat, lon, radius)
+                println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads")
+                WorldGenerator.generate(osmData, lat, lon, world)
+                GeoapifyEnricher.enrichWorld(world, lat, lon)
+            } catch (e: Exception) {
+                println("OSM fetch failed: ${e.message}")
+            }
+        }.start()
 
         val mainScene = scene {
             val keys = mutableSetOf<Int>()
