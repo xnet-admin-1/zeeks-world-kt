@@ -17,8 +17,8 @@ class ZeeksGame {
 
     fun createScene(ctx: KoolContext): Scene {
         // Fetch and generate Zeek's neighborhood from OSM
-        val lat = 43.6121
-        val lon = -116.3915
+        val lat = 43.6057601
+        val lon = -116.3932135
         val radius = 100.0 // meters
         try {
             println("Fetching OSM data for Zeek's neighborhood...")
