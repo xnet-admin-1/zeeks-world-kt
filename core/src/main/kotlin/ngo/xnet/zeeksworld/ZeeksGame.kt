@@ -87,6 +87,37 @@ class ZeeksGame {
                     for ((pos, chunk) in world.chunks) {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
                     }
+                    // Oliver the cat - oversized (5x scale)
+                    val ox = 3f; val oz = 3f; val s = 5f // 5-block scale
+                    this.color = de.fabmax.kool.util.Color(1f, 0.6f, 0.2f, 1f) // orange
+                    // Body (2x3x2 blocks)
+                    for (bx in 0..1) for (by in 0..2) for (bz in 0..1) {
+                        cube { origin.set(ox + bx*s, s + by*s, oz + bz*s); size.set(s, s, s) }
+                    }
+                    // Head (2x2x2)
+                    this.color = de.fabmax.kool.util.Color(1f, 0.7f, 0.3f, 1f) // lighter orange
+                    for (bx in 0..1) for (by in 0..1) for (bz in 0..1) {
+                        cube { origin.set(ox + bx*s, 4*s + by*s, oz + bz*s); size.set(s, s, s) }
+                    }
+                    // Ears
+                    this.color = de.fabmax.kool.util.Color(1f, 0.5f, 0.1f, 1f) // dark orange
+                    cube { origin.set(ox, 6*s, oz); size.set(s, s, s) }
+                    cube { origin.set(ox + s, 6*s, oz); size.set(s, s, s) }
+                    // Tail (3 blocks long)
+                    this.color = de.fabmax.kool.util.Color(1f, 0.6f, 0.2f, 1f)
+                    cube { origin.set(ox - s, s, oz); size.set(s, s, s) }
+                    cube { origin.set(ox - 2*s, s + s*0.5f, oz); size.set(s, s, s) }
+                    cube { origin.set(ox - 3*s, 2*s, oz); size.set(s, s, s) }
+                    // Eyes (white + green)
+                    this.color = de.fabmax.kool.util.Color(1f, 1f, 1f, 1f)
+                    cube { origin.set(ox, 5*s, oz + 2*s); size.set(s*0.5f, s*0.5f, s*0.3f) }
+                    cube { origin.set(ox + s*0.7f, 5*s, oz + 2*s); size.set(s*0.5f, s*0.5f, s*0.3f) }
+                    this.color = de.fabmax.kool.util.Color(0.2f, 0.8f, 0.2f, 1f) // green pupils
+                    cube { origin.set(ox + s*0.1f, 5*s, oz + 2.2f*s); size.set(s*0.3f, s*0.3f, s*0.2f) }
+                    cube { origin.set(ox + s*0.8f, 5*s, oz + 2.2f*s); size.set(s*0.3f, s*0.3f, s*0.2f) }
+                    // Nose (pink)
+                    this.color = de.fabmax.kool.util.Color(1f, 0.6f, 0.7f, 1f)
+                    cube { origin.set(ox + s*0.4f, 4.5f*s, oz + 2*s); size.set(s*0.4f, s*0.3f, s*0.2f) }
                 }
                 shader = KslPbrShader {
                     color { vertexColor() }
