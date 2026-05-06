@@ -16,29 +16,18 @@ class ZeeksGame {
     val world = World()
 
     fun createScene(ctx: KoolContext): Scene {
-        world.generateFlat(50)
-        for (x in -10..10 step 8) {
-            for (z in -10..10 step 8) {
-                for (y in 1..3) {
-                    world.setBlock(x, y, z, Block.STONE)
-                    world.setBlock(x+1, y, z, Block.STONE)
-                    world.setBlock(x, y, z+1, Block.STONE)
-                    world.setBlock(x+1, y, z+1, Block.GLASS)
-                }
-                world.setBlock(x, 1, z, Block.WOOD)
-                world.setBlock(x+1, 1, z+1, Block.WOOD)
-            }
-        }
-        for (x in -20..20 step 12) {
-            for (z in -20..20 step 12) {
-                world.setBlock(x, 1, z, Block.WOOD)
-                world.setBlock(x, 2, z, Block.WOOD)
-                world.setBlock(x, 3, z, Block.LEAF)
-                world.setBlock(x-1, 3, z, Block.LEAF)
-                world.setBlock(x+1, 3, z, Block.LEAF)
-                world.setBlock(x, 3, z-1, Block.LEAF)
-                world.setBlock(x, 3, z+1, Block.LEAF)
-            }
+        // Fetch and generate Zeek's neighborhood from OSM
+        val lat = 43.6121
+        val lon = -116.3915
+        val radius = 100.0 // meters
+        try {
+            println("Fetching OSM data for Zeek's neighborhood...")
+            val osmData = OsmFetcher.fetchArea(lat, lon, radius)
+            println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads, ${osmData.parks.size} parks")
+            WorldGenerator.generate(osmData, lat, lon, world)
+        } catch (e: Exception) {
+            println("OSM fetch failed: ${e.message}, using flat world")
+            world.generateFlat(50)
         }
 
         return scene {
