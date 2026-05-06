@@ -2,6 +2,7 @@ package ngo.xnet.zeeksworld
 
 import de.fabmax.kool.KoolContext
 import de.fabmax.kool.math.Vec3f
+import de.fabmax.kool.modules.ksl.KslPbrShader
 import de.fabmax.kool.scene.*
 import de.fabmax.kool.util.Color
 
@@ -9,9 +10,7 @@ class ZeeksGame {
     val world = World()
 
     fun createScene(ctx: KoolContext): Scene {
-        // Generate world
         world.generateFlat(50)
-        // Add some buildings
         for (x in -10..10 step 8) {
             for (z in -10..10 step 8) {
                 for (y in 1..3) {
@@ -24,7 +23,6 @@ class ZeeksGame {
                 world.setBlock(x+1, 1, z+1, Block.WOOD)
             }
         }
-        // Trees
         for (x in -20..20 step 12) {
             for (z in -20..20 step 12) {
                 world.setBlock(x, 1, z, Block.WOOD)
@@ -38,31 +36,27 @@ class ZeeksGame {
         }
 
         return scene {
-            camera.apply {
-                position.set(0f, 20f, 30f)
-                lookAt.set(Vec3f.ZERO)
+            orbitCamera {
+                setRotation(20f, -30f)
+                setZoom(40.0)
             }
 
             lighting.singleDirectionalLight {
                 setup(Vec3f(-1f, -2f, -1f))
-                setColor(Color.WHITE, 1f)
+                setColor(Color.WHITE, 5f)
             }
 
             addColorMesh {
                 generate {
-                    // Mesh all chunks
                     for ((pos, chunk) in world.chunks) {
-                        val chunkMesh = ChunkMesher.buildMesh(chunk, pos, world)
-                        // Add chunk geometry to this mesh
-                        geometry.addGeometry(chunkMesh.geometry)
+                        ChunkMesher.buildGeometry(chunk, pos, world, this)
                     }
                 }
-            }
-
-            orbitInputTransform {
-                setMouseRotation(20f, -30f)
-                zoom = 40.0
-                addNode(camera)
+                shader = KslPbrShader {
+                    color { vertexColor() }
+                    metallic(0f)
+                    roughness(0.25f)
+                }
             }
         }
     }
