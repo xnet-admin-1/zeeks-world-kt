@@ -25,6 +25,8 @@ class ZeeksGame {
             val osmData = OsmFetcher.fetchArea(lat, lon, radius)
             println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads, ${osmData.parks.size} parks")
             WorldGenerator.generate(osmData, lat, lon, world)
+            // Enrich with Geoapify POIs
+            GeoapifyEnricher.enrichWorld(world, lat, lon)
         } catch (e: Exception) {
             println("OSM fetch failed: ${e.message}, using flat world")
             world.generateFlat(50)
