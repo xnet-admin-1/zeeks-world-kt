@@ -66,6 +66,28 @@ object WorldGenerator {
             }
             fillPolygon(b.outline, ::toBlock, ::inBounds) { x, z -> world.setBlock(x, 1, z, Block.WOOD) }
         }
+
+        // Scatter trees along roads and in open grass
+        val rng = java.util.Random(42)
+        for (x in -groundRadius until groundRadius step 4) {
+            for (z in -groundRadius until groundRadius step 4) {
+                if (rng.nextFloat() > 0.15f) continue // 15% chance
+                // Only place on grass (don't overwrite buildings/roads)
+                if (world.getBlock(x, 0, z) == Block.GRASS && world.getBlock(x, 1, z) == Block.AIR) {
+                    placeTree(world, x, z)
+                }
+            }
+        }
+
+        // Bushes (single leaf blocks) for ground cover
+        for (x in -groundRadius until groundRadius step 3) {
+            for (z in -groundRadius until groundRadius step 3) {
+                if (rng.nextFloat() > 0.2f) continue // 20% chance
+                if (world.getBlock(x, 0, z) == Block.GRASS && world.getBlock(x, 1, z) == Block.AIR) {
+                    world.setBlock(x, 1, z, Block.LEAF)
+                }
+            }
+        }
     }
 
     private fun placeTree(world: World, x: Int, z: Int) {
