@@ -51,6 +51,8 @@ class MainActivity : Activity() {
     private fun addButton(parent: FrameLayout, text: String, x: Int, y: Int, size: Int, rightAlign: Boolean = false, onState: (Boolean) -> Unit) {
         val btn = Button(this).apply {
             this.text = text
+            isClickable = true
+            isFocusable = true
             textSize = 24f
             alpha = 0.6f
             setOnTouchListener { _, event ->

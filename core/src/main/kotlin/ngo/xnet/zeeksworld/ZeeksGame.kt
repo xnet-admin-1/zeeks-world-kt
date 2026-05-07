@@ -103,7 +103,6 @@ class ZeeksGame {
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
                 playerY = groundY
 
-                // Move orbit pivot to player (doesn't interrupt drag)
                 orbit.translation.set(playerX.toDouble(), playerY.toDouble(), playerZ.toDouble())
             }
 
