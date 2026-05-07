@@ -28,6 +28,7 @@ class ZeeksGame {
         val radius = 100.0
         // Fast flat world for immediate display
         world.generateFlat(50)
+        println("World has ${world.chunks.size} chunks")
         // Load OSM in background (avoids ANR on Android)
         Thread {
             try {
@@ -57,6 +58,8 @@ class ZeeksGame {
             val cam = PerspectiveCamera()
             cam.clipNear = 0.5f
             cam.clipFar = 500f
+            cam.position.set(0f, 30f, 30f)
+            cam.lookAt.set(0f, 0f, 0f)
             camera = cam
 
             lighting.singleDirectionalLight {
@@ -64,8 +67,8 @@ class ZeeksGame {
                 setColor(Color.WHITE, 5f)
             }
 
-            // Static world mesh
-            addColorMesh {
+            // World mesh (rebuilds when chunks change)
+            val worldMesh = addColorMesh("world") {
                 generate {
                     for ((pos, chunk) in world.chunks) {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
@@ -88,7 +91,17 @@ class ZeeksGame {
                 }
             }
 
+            var lastChunkCount = 0
             onUpdate {
+                // Rebuild world mesh when new chunks arrive
+                if (world.chunks.size != lastChunkCount) {
+                    lastChunkCount = world.chunks.size
+                    worldMesh.generate {
+                        for ((pos, chunk) in world.chunks) {
+                            ChunkMesher.buildGeometry(chunk, pos, world, this)
+                        }
+                    }
+                }
                 val dt = Time.deltaT
                 val speed = 8f * dt
 
