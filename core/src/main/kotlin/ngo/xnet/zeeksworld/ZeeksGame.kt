@@ -64,7 +64,7 @@ class ZeeksGame {
             onUpdate {
                 val dt = Time.deltaT
                 val speed = 8f * dt
-                val yawRad = Math.toRadians(orbit.horizontalRotation.toDouble()).toFloat()
+                val yawRad = Math.toRadians(orbit.verticalRotation.toDouble()).toFloat()
                 val fwdX = -sin(yawRad)
                 val fwdZ = -cos(yawRad)
                 val rightX = cos(yawRad)
@@ -84,7 +84,7 @@ class ZeeksGame {
                     if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
                     if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
-                if (dx != 0f || dz != 0f) {
+                if (dx != 0f || dz != 0f || btnJump || KEY_SPACE in keys) {
                     val t = orbit.translation
                     val newX = (t.x + dx).toFloat()
                     val newZ = (t.z + dz).toFloat()
@@ -97,6 +97,9 @@ class ZeeksGame {
                             break
                         }
                     }
+
+                    // Jump
+                    if (btnJump || KEY_SPACE in keys) groundY += 3f
 
                     orbit.setTranslation(newX, groundY, newZ)
                 }
