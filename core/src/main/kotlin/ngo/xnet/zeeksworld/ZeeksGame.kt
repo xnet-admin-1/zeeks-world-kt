@@ -84,37 +84,24 @@ class ZeeksGame {
                     if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
                     if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
-                if (dx != 0f || dz != 0f) {
-                    val t = orbit.translation
-                    val newX = (t.x + dx).toFloat()
-                    val newZ = (t.z + dz).toFloat()
+                // Apply movement
+                val t = orbit.translation
+                val newX = (t.x + dx).toFloat()
+                val newZ = (t.z + dz).toFloat()
 
-                    // Ground collision: find highest solid block at player position
-                    var groundY = 0f
-                    for (y in 15 downTo 0) {
-                        if (world.getBlock(newX.toInt(), y, newZ.toInt()).solid) {
-                            groundY = (y + 1).toFloat()
-                            break
-                        }
+                // Ground collision: always snap to ground
+                var groundY = 0f
+                for (y in 15 downTo 0) {
+                    if (world.getBlock(newX.toInt(), y, newZ.toInt()).solid) {
+                        groundY = (y + 1).toFloat()
+                        break
                     }
-
-                    // Jump (only while held)
-                    if (btnJump || KEY_SPACE in keys) groundY += 3f
-
-                    orbit.setTranslation(newX, groundY, newZ)
-                } else if (btnJump || KEY_SPACE in keys) {
-                    // Jump while stationary
-                    val t = orbit.translation
-                    var groundY = 0f
-                    for (y in 15 downTo 0) {
-                        if (world.getBlock(t.x.toInt(), y, t.z.toInt()).solid) {
-                            groundY = (y + 1).toFloat()
-                            break
-                        }
-                    }
-                    groundY += 3f
-                    orbit.setTranslation(t.x.toFloat(), groundY, t.z.toFloat())
                 }
+
+                // Jump: lift while held
+                if (btnJump || KEY_SPACE in keys) groundY += 3f
+
+                orbit.setTranslation(newX, groundY, newZ)
             }
 
             lighting.singleDirectionalLight {
