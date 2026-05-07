@@ -119,9 +119,27 @@ class ZeeksGame {
                 shader = KslPbrShader { color { vertexColor() } }
             }
 
+            // Oliver the cat (orange, 3 blocks tall, offset from player)
+            val oliverMesh = addColorMesh("oliver") {
+                generate {
+                    color = Color(1f, 0.6f, 0.2f, 1f) // orange body
+                    cube { origin.set(0f, 0f, 0f); size.set(0.8f, 1f, 1.2f) }
+                    color = Color(1f, 0.7f, 0.3f, 1f) // head
+                    cube { origin.set(0f, 1f, 0.1f); size.set(0.7f, 0.7f, 0.7f) }
+                    color = Color(1f, 0.5f, 0.1f, 1f) // ears
+                    cube { origin.set(0f, 1.6f, 0.1f); size.set(0.2f, 0.3f, 0.2f) }
+                    cube { origin.set(0.5f, 1.6f, 0.1f); size.set(0.2f, 0.3f, 0.2f) }
+                    color = Color(1f, 0.6f, 0.2f, 1f) // tail
+                    cube { origin.set(0.2f, 0.5f, -0.8f); size.set(0.2f, 0.2f, 0.8f) }
+                }
+                shader = KslPbrShader { color { vertexColor() } }
+            }
+
             onUpdate {
                 val t = orbit.translation
                 playerMesh.transform.setIdentity().translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
+                // Oliver follows 3 blocks behind player
+                oliverMesh.transform.setIdentity().translate(t.x.toFloat() + 3f, t.y.toFloat(), t.z.toFloat() + 2f)
             }
             var rebuildTime = 3.0
             onUpdate {
