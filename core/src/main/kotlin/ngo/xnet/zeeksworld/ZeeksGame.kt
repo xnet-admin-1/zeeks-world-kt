@@ -57,18 +57,19 @@ class ZeeksGame {
             }
             InputStack.pushTop(inputHandler)
 
-            val orbit = orbitCamera {
-                setRotation(20f, -30f)
-                setZoom(40.0)
-                setTranslation(0f, 5f, 0f)
-                rightDragMethod = OrbitInputTransform.DragMethod.NONE
-                middleDragMethod = OrbitInputTransform.DragMethod.NONE
+            val cam = PerspectiveCamera().apply {
+                clipNear = 0.5f
+                clipFar = 500f
             }
+            camera = cam
+            var camYaw = 0f
+            var camPitch = 30f
+            var camDist = 20f
 
             onUpdate {
                 val dt = Time.deltaT
                 val speed = 8f * dt
-                val yawRad = Math.toRadians(orbit.verticalRotation.toDouble()).toFloat()
+                val yawRad = Math.toRadians(camYaw.toDouble()).toFloat()
                 val fwdX = -sin(yawRad)
                 val fwdZ = -cos(yawRad)
                 val rightX = cos(yawRad)
@@ -103,7 +104,20 @@ class ZeeksGame {
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
                 playerY = groundY
 
-                orbit.translation.set(playerX.toDouble(), playerY.toDouble(), playerZ.toDouble())
+                // Camera rotation from touch (anywhere on screen that's not a button)
+                val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
+                if (ptr.isValid && ptr.isDrag) {
+                    camYaw += ptr.delta.x * 0.3f
+                    camPitch = (camPitch - ptr.delta.y * 0.3f).coerceIn(10f, 80f)
+                }
+
+                // Position camera behind player
+                val pitchRad = Math.toRadians(camPitch.toDouble()).toFloat()
+                val camX = playerX + sin(yawRad) * camDist * cos(pitchRad)
+                val camZ = playerZ + cos(yawRad) * camDist * cos(pitchRad)
+                val camY = playerY + camDist * sin(pitchRad)
+                cam.position.set(camX, camY, camZ)
+                cam.lookAt.set(playerX, playerY + 2f, playerZ)
             }
 
             lighting.singleDirectionalLight {
@@ -157,7 +171,7 @@ class ZeeksGame {
             }
 
             onUpdate {
-                val yaw = orbit.verticalRotation.toFloat()
+                val yaw = camYaw
                 playerMesh.transform.setIdentity()
                     .translate(playerX, playerY, playerZ)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
