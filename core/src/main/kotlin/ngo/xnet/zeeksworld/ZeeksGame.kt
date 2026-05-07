@@ -77,12 +77,11 @@ class ZeeksGame {
 
                 // Touch: left-side drag = move in all directions
                 val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
-                if (ptr.isValid && ptr.isLeftButtonDown && ptr.pos.x < 640f) {
-                    val tdx = ptr.delta.x * 0.15f
-                    val tdz = ptr.delta.y * 0.15f
-                    // Map screen drag to world movement relative to camera
-                    dx += (rightX * tdx + fwdX * -tdz) * speed
-                    dz += (rightZ * tdx + fwdZ * -tdz) * speed
+                if (ptr.isValid && ptr.isDrag && ptr.pos.x < 640f) {
+                    val tdx = ptr.delta.x * 0.02f
+                    val tdz = ptr.delta.y * 0.02f
+                    dx += rightX * tdx + fwdX * -tdz
+                    dz += rightZ * tdx + fwdZ * -tdz
                 }
 
 
@@ -169,10 +168,12 @@ class ZeeksGame {
                 }
             }
             var rebuildTime = 3.0
+            var rebuilds = 0
             onUpdate {
-                if (worldDirty || (rebuildTime > 0 && Time.gameTime > rebuildTime)) {
+                if (worldDirty || (rebuilds < 3 && Time.gameTime > rebuildTime)) {
                     worldDirty = false
-                    rebuildTime = -1.0
+                    rebuilds++
+                    rebuildTime = Time.gameTime + 3.0
                     worldMesh.generate {
                         for ((pos, chunk) in world.chunks) {
                             ChunkMesher.buildGeometry(chunk, pos, world, this)
