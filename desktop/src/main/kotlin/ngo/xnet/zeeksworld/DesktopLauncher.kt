@@ -9,5 +9,5 @@ fun main() = KoolApplication(
     )
 ) {
     val game = ZeeksGame()
-    game.createScenes(ctx).forEach { ctx.scenes += it }
+    ctx.scenes += game.createScene(ctx)
 }

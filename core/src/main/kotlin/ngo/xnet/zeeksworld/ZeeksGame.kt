@@ -1,15 +1,12 @@
 package ngo.xnet.zeeksworld
 
 import de.fabmax.kool.KoolContext
-import de.fabmax.kool.input.PointerInput
 import de.fabmax.kool.input.InputStack
 import de.fabmax.kool.input.KeyboardInput
 import de.fabmax.kool.input.UniversalKeyCode
-import de.fabmax.kool.math.MutableVec3f
 import de.fabmax.kool.math.Vec3f
 import de.fabmax.kool.modules.ksl.KslPbrShader
 import de.fabmax.kool.scene.*
-import de.fabmax.kool.scene.geometry.Usage
 import de.fabmax.kool.util.Color
 import de.fabmax.kool.util.Time
 import kotlin.math.cos
@@ -17,32 +14,23 @@ import kotlin.math.sin
 
 class ZeeksGame {
     val world = World()
-    val oliver = Oliver(Vec3f(3f, 2f, 3f))
-    val playerPos = MutableVec3f(0f, 2f, 0f)
-    val touchControls = TouchControls()
-    var cameraYaw = 0f
 
-    fun createScenes(ctx: KoolContext): List<Scene> {
-        val lat = 43.6057601
-        val lon = -116.3932135
-        val radius = 100.0
-        // Fast flat world for immediate display
-        world.generateFlat(50)
-        println("World has ${world.chunks.size} chunks")
-        // Load OSM in background (avoids ANR on Android)
-        Thread {
-            try {
-                println("Fetching OSM data...")
-                val osmData = OsmFetcher.fetchArea(lat, lon, radius)
-                println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads")
-                WorldGenerator.generate(osmData, lat, lon, world)
-                GeoapifyEnricher.enrichWorld(world, lat, lon)
-            } catch (e: Exception) {
-                println("OSM fetch failed: ${e.message}")
-            }
-        }.start()
+    fun createScene(ctx: KoolContext): Scene {
+        // Fetch and generate Zeek's neighborhood from OSM
+        val lat = 43.6121
+        val lon = -116.3915
+        val radius = 100.0 // meters
+        try {
+            println("Fetching OSM data for Zeek's neighborhood...")
+            val osmData = OsmFetcher.fetchArea(lat, lon, radius)
+            println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads, ${osmData.parks.size} parks")
+            WorldGenerator.generate(osmData, lat, lon, world)
+        } catch (e: Exception) {
+            println("OSM fetch failed: ${e.message}, using flat world")
+            world.generateFlat(50)
+        }
 
-        val mainScene = scene {
+        return scene {
             val keys = mutableSetOf<Int>()
             val inputHandler = InputStack.InputHandler("fly-cam")
             inputHandler.keyboardListeners += InputStack.KeyboardListener { keyEvents, _ ->
@@ -54,21 +42,45 @@ class ZeeksGame {
             }
             InputStack.pushTop(inputHandler)
 
-            // Third-person camera
-            val cam = PerspectiveCamera()
-            cam.clipNear = 0.5f
-            cam.clipFar = 500f
-            cam.position.set(0f, 30f, 30f)
-            cam.lookAt.set(0f, 0f, 0f)
-            camera = cam
+            val orbit = orbitCamera {
+                setRotation(20f, -30f)
+                setZoom(40.0)
+                setTranslation(0f, 5f, 0f)
+            }
+
+            onUpdate {
+                val dt = Time.deltaT
+                val speed = 30f * dt
+                val yawRad = Math.toRadians(orbit.horizontalRotation.toDouble()).toFloat()
+                val fwdX = -sin(yawRad)
+                val fwdZ = -cos(yawRad)
+                val rightX = cos(yawRad)
+                val rightZ = -sin(yawRad)
+
+                var dx = 0f; var dy = 0f; var dz = 0f
+                if (KEY_W in keys) { dx += fwdX * speed; dz += fwdZ * speed }
+                if (KEY_S in keys) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
+                if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
+                if (KEY_Q in keys || KEY_SHIFT in keys) { dy -= speed }
+                if (KEY_E in keys || KEY_SPACE in keys) { dy += speed }
+
+                if (dx != 0f || dy != 0f || dz != 0f) {
+                    val t = orbit.translation
+                    orbit.setTranslation(
+                        (t.x + dx).toFloat(),
+                        (t.y + dy).toFloat(),
+                        (t.z + dz).toFloat()
+                    )
+                }
+            }
 
             lighting.singleDirectionalLight {
                 setup(Vec3f(-1f, -2f, -1f))
                 setColor(Color.WHITE, 5f)
             }
 
-            // World mesh (rebuilds when chunks change)
-            val worldMesh = addColorMesh("world") {
+            addColorMesh {
                 generate {
                     for ((pos, chunk) in world.chunks) {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
@@ -80,71 +92,7 @@ class ZeeksGame {
                     roughness(0.25f)
                 }
             }
-
-            // Dynamic Oliver mesh
-            val oliverMesh = addColorMesh("oliver") {
-                generate { oliver.buildMesh(this) }
-                shader = KslPbrShader {
-                    color { vertexColor() }
-                    metallic(0f)
-                    roughness(0.25f)
-                }
-            }
-
-            var lastChunkCount = 0
-            onUpdate {
-                // Rebuild world mesh when new chunks arrive
-                if (world.chunks.size != lastChunkCount) {
-                    lastChunkCount = world.chunks.size
-                    worldMesh.generate {
-                        for ((pos, chunk) in world.chunks) {
-                            ChunkMesher.buildGeometry(chunk, pos, world, this)
-                        }
-                    }
-                }
-                val dt = Time.deltaT
-                val speed = 8f * dt
-
-                // Touch controls (mobile) + keyboard (desktop)
-
-                var dx = 0f
-                var dz = 0f
-
-                // WASD movement (desktop)
-                if (KEY_W in keys) dz -= speed
-                if (KEY_S in keys) dz += speed
-                if (KEY_A in keys) dx -= speed
-                if (KEY_D in keys) dx += speed
-
-                playerPos.x += dx
-                playerPos.z += dz
-
-                // Touch camera rotation
-                
-
-                // Update Oliver
-                oliver.update(dt, playerPos)
-
-                // Rebuild Oliver mesh
-                oliverMesh.generate { oliver.buildMesh(this) }
-
-                // Third-person camera: rotates around player
-                val camDist = 15f
-                val camHeight = 10f
-                val rad = Math.toRadians(cameraYaw.toDouble()).toFloat()
-                cam.position.set(
-                    playerPos.x + kotlin.math.sin(rad) * camDist,
-                    playerPos.y + camHeight,
-                    playerPos.z + kotlin.math.cos(rad) * camDist
-                )
-                cam.lookAt.set(playerPos)
-            }
         }
-
-        val hud = Hud()
-        val scenes = mutableListOf(mainScene, hud.createScene(ctx))
-        touchControls.createOverlay()?.let { scenes += it }
-        return scenes
     }
 
     companion object {
@@ -152,5 +100,9 @@ class ZeeksGame {
         private val KEY_A = UniversalKeyCode('A').code
         private val KEY_S = UniversalKeyCode('S').code
         private val KEY_D = UniversalKeyCode('D').code
+        private val KEY_Q = UniversalKeyCode('Q').code
+        private val KEY_E = UniversalKeyCode('E').code
+        private val KEY_SPACE = UniversalKeyCode(' ').code
+        private val KEY_SHIFT = KeyboardInput.KEY_SHIFT_LEFT.code
     }
 }
