@@ -1,5 +1,6 @@
 package ngo.xnet.zeeksworld
 
+import de.fabmax.kool.math.deg
 import de.fabmax.kool.KoolContext
 import de.fabmax.kool.input.InputStack
 import de.fabmax.kool.input.KeyboardInput
@@ -156,9 +157,17 @@ class ZeeksGame {
 
             onUpdate {
                 val t = orbit.translation
-                playerMesh.transform.setIdentity().translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
-                // Oliver follows 3 blocks behind player
-                oliverMesh.transform.setIdentity().translate(t.x.toFloat() + 3f, t.y.toFloat(), t.z.toFloat() + 2f)
+                val yaw = orbit.horizontalRotation.toFloat()
+                playerMesh.transform.setIdentity()
+                    .translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
+                    .rotate(yaw.deg, Vec3f.Y_AXIS)
+                // Oliver offset behind player based on camera direction
+                val oRad = Math.toRadians((yaw + 150.0)).toFloat()
+                val ox = t.x.toFloat() + sin(oRad) * 3f
+                val oz = t.z.toFloat() + cos(oRad) * 3f
+                oliverMesh.transform.setIdentity()
+                    .translate(ox, t.y.toFloat(), oz)
+                    .rotate(yaw.deg, Vec3f.Y_AXIS)
 
                 // Oliver speaks once on first movement
                 if (!oliverGreeted && Time.gameTime > 5.0) {
