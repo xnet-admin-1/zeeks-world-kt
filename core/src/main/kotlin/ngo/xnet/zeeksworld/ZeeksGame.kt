@@ -17,6 +17,7 @@ class ZeeksGame {
     val world = World()
     @Volatile var worldDirty = false
     var oliverGreeted = false
+    var btnForward = false; var btnBack = false; var btnLeft = false; var btnRight = false; var btnJump = false
 
     val hud = Hud()
 
@@ -76,16 +77,12 @@ class ZeeksGame {
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
 
-                // Touch: left-side drag = move in all directions
-                val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
-                if (ptr.isValid && ptr.isDrag && ptr.pos.x < 640f) {
-                    ptr.consume(de.fabmax.kool.input.PointerInput.CONSUMED_ALL)
-                    val tdx = ptr.delta.x * 0.02f
-                    val tdz = ptr.delta.y * 0.02f
-                    dx += rightX * tdx + fwdX * -tdz
-                    dz += rightZ * tdx + fwdZ * -tdz
-                }
-
+                // Android: physical buttons
+                
+                    if (btnForward) { dx += fwdX * speed; dz += fwdZ * speed }
+                    if (btnBack) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                    if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
+                    if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
                 if (dx != 0f || dz != 0f) {
                     val t = orbit.translation
