@@ -220,7 +220,50 @@ class ZeeksGame {
             }
         }
 
-        return listOf(mainScene)
+        // Controls overlay (D-pad left, analog pad right)
+        val controlsScene = scene("controls") {
+            camera = OrthographicCamera().apply {
+                isKeepAspectRatio = false
+                left = 0f
+                right = 1344f  // approximate screen width
+                bottom = 2992f // approximate screen height (flipped)
+                top = 0f
+                clipNear = -1f
+                clipFar = 1f
+            }
+
+            // D-pad background (bottom-left)
+            addColorMesh {
+                generate {
+                    color = Color(0.2f, 0.2f, 0.2f, 0.4f)
+                    // D-pad circle
+                    rect { origin.set(50f, 2550f, 0f); size.set(350f, 350f) }
+                    // Arrows
+                    color = Color(1f, 1f, 1f, 0.7f)
+                    // Up
+                    rect { origin.set(175f, 2560f, 0.1f); size.set(50f, 80f) }
+                    // Down
+                    rect { origin.set(175f, 2810f, 0.1f); size.set(50f, 80f) }
+                    // Left
+                    rect { origin.set(60f, 2685f, 0.1f); size.set(80f, 50f) }
+                    // Right
+                    rect { origin.set(310f, 2685f, 0.1f); size.set(80f, 50f) }
+                }
+            }
+
+            // Analog pad (bottom-right)
+            addColorMesh {
+                generate {
+                    color = Color(0.2f, 0.2f, 0.2f, 0.4f)
+                    rect { origin.set(944f, 2600f, 0f); size.set(300f, 300f) }
+                    color = Color(1f, 1f, 1f, 0.5f)
+                    // Center dot
+                    rect { origin.set(1069f, 2725f, 0.1f); size.set(50f, 50f) }
+                }
+            }
+        }
+
+        return listOf(mainScene, controlsScene)
     }
 
     companion object {
