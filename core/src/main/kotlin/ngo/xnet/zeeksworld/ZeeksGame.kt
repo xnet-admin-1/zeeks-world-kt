@@ -157,7 +157,7 @@ class ZeeksGame {
 
             onUpdate {
                 val t = orbit.translation
-                val yaw = orbit.horizontalRotation.toFloat()
+                val yaw = orbit.verticalRotation.toFloat()
                 playerMesh.transform.setIdentity()
                     .translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
