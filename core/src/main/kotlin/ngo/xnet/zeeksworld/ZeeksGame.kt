@@ -104,7 +104,10 @@ class ZeeksGame {
                 // Jump: lift while held
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
 
-                orbit.setTranslation(newX, groundY, newZ)
+                // Only update translation if position changed (avoids interrupting orbit drag)
+                if (dx != 0f || dz != 0f || groundY != t.y.toFloat() || btnJump || KEY_SPACE in keys) {
+                    orbit.setTranslation(newX, groundY, newZ)
+                }
             }
 
             lighting.singleDirectionalLight {
