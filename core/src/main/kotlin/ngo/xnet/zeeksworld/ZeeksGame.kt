@@ -100,6 +100,27 @@ class ZeeksGame {
                     roughness(0.25f)
                 }
             }
+
+            val playerMesh = addColorMesh("player") {
+                generate {
+                    // Legs (blue)
+                    color = Color(0.2f, 0.3f, 0.7f, 1f)
+                    cube { origin.set(0f, 0f, 0f); size.set(0.8f, 1f, 0.8f) }
+                    // Body (purple)
+                    color = Color(0.5f, 0.2f, 0.8f, 1f)
+                    cube { origin.set(0f, 1f, 0f); size.set(0.8f, 1f, 0.8f) }
+                    cube { origin.set(0f, 2f, 0f); size.set(0.8f, 1f, 0.8f) }
+                    // Head (skin)
+                    color = Color(0.9f, 0.7f, 0.5f, 1f)
+                    cube { origin.set(0f, 3f, 0f); size.set(0.8f, 1f, 0.8f) }
+                }
+                shader = KslPbrShader { color { vertexColor() } }
+            }
+
+            onUpdate {
+                val t = orbit.translation
+                playerMesh.transform.setIdentity().translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
+            }
             var rebuildTime = 3.0
             onUpdate {
                 if (worldDirty || (rebuildTime > 0 && Time.gameTime > rebuildTime)) {
