@@ -19,7 +19,6 @@ class ZeeksGame {
     @Volatile var worldDirty = false
     var oliverGreeted = false
     var btnForward = false; var btnBack = false; var btnLeft = false; var btnRight = false; var btnJump = false
-    var playerX = 0f; var playerY = 0f; var playerZ = 0f
 
     val hud = Hud()
 
@@ -57,19 +56,18 @@ class ZeeksGame {
             }
             InputStack.pushTop(inputHandler)
 
-            val cam = PerspectiveCamera().apply {
-                clipNear = 0.5f
-                clipFar = 500f
+            val orbit = orbitCamera {
+                setRotation(20f, -30f)
+                setZoom(40.0)
+                setTranslation(0f, 5f, 0f)
+                rightDragMethod = OrbitInputTransform.DragMethod.NONE
+                middleDragMethod = OrbitInputTransform.DragMethod.NONE
             }
-            camera = cam
-            var camYaw = 0f
-            var camPitch = 30f
-            var camDist = 20f
 
             onUpdate {
                 val dt = Time.deltaT
                 val speed = 8f * dt
-                val yawRad = Math.toRadians(camYaw.toDouble()).toFloat()
+                val yawRad = Math.toRadians(orbit.verticalRotation.toDouble()).toFloat()
                 val fwdX = -sin(yawRad)
                 val fwdZ = -cos(yawRad)
                 val rightX = cos(yawRad)
@@ -82,56 +80,31 @@ class ZeeksGame {
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
 
-                // Android: touch zones (all pointers)
-                // Bottom-left 400x400 = D-pad, everything else = camera
-                for (p in de.fabmax.kool.input.PointerInput.pointerState.pointers) {
-                    if (!p.isValid || !p.isLeftButtonDown) continue
-                    if (p.pos.x < 400f && p.pos.y > 2500f) {
-                        // D-pad zone: drag direction = movement
-                        if (p.isDrag) {
-                            val tdx = p.delta.x
-                            val tdz = p.delta.y
-                            dx += (rightX * tdx + fwdX * -tdz) * 0.02f
-                            dz += (rightZ * tdx + fwdZ * -tdz) * 0.02f
-                        }
-                    } else {
-                        // Camera zone
-                        if (p.isDrag) {
-                            camYaw += p.delta.x * 0.3f
-                            camPitch = (camPitch - p.delta.y * 0.3f).coerceIn(10f, 80f)
-                        }
-                    }
-                }
+                // Android: physical buttons
+                
+                    if (btnForward) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                    if (btnBack) { dx += fwdX * speed; dz += fwdZ * speed }
+                    if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
+                    if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
-                // Button state from game fields (set by Android buttons if they exist)
-                if (btnForward) { dx -= fwdX * speed; dz -= fwdZ * speed }
-                if (btnBack) { dx += fwdX * speed; dz += fwdZ * speed }
-                if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
-                if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
+                // Apply movement
+                val t = orbit.translation
+                val newX = (t.x + dx).toFloat()
+                val newZ = (t.z + dz).toFloat()
 
-                // Apply movement using player position (not orbit translation)
-                playerX += dx
-                playerZ += dz
-
-                // Ground collision
+                // Ground collision: always snap to ground
                 var groundY = 0f
                 for (y in 15 downTo 0) {
-                    if (world.getBlock(playerX.toInt(), y, playerZ.toInt()).solid) {
+                    if (world.getBlock(newX.toInt(), y, newZ.toInt()).solid) {
                         groundY = (y + 1).toFloat()
                         break
                     }
                 }
+
+                // Jump: lift while held
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
-                playerY = groundY
 
-
-                // Position camera behind player
-                val pitchRad = Math.toRadians(camPitch.toDouble()).toFloat()
-                val camX = playerX + sin(yawRad) * camDist * cos(pitchRad)
-                val camZ = playerZ + cos(yawRad) * camDist * cos(pitchRad)
-                val camY = playerY + camDist * sin(pitchRad)
-                cam.position.set(camX, camY, camZ)
-                cam.lookAt.set(playerX, playerY + 2f, playerZ)
+                orbit.setTranslation(newX, groundY, newZ)
             }
 
             lighting.singleDirectionalLight {
@@ -185,15 +158,17 @@ class ZeeksGame {
             }
 
             onUpdate {
-                val yaw = camYaw
+                val t = orbit.translation
+                val yaw = orbit.verticalRotation.toFloat()
                 playerMesh.transform.setIdentity()
-                    .translate(playerX, playerY, playerZ)
+                    .translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
+                // Oliver offset behind player based on camera direction
                 val oRad = Math.toRadians((yaw + 150.0)).toFloat()
-                val ox = playerX + sin(oRad) * 3f
-                val oz = playerZ + cos(oRad) * 3f
+                val ox = t.x.toFloat() + sin(oRad) * 3f
+                val oz = t.z.toFloat() + cos(oRad) * 3f
                 oliverMesh.transform.setIdentity()
-                    .translate(ox, playerY, oz)
+                    .translate(ox, t.y.toFloat(), oz)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
 
                 // Oliver speaks once on first movement
@@ -216,49 +191,6 @@ class ZeeksGame {
                             ChunkMesher.buildGeometry(chunk, pos, world, this)
                         }
                     }
-                }
-            }
-        }
-
-        // Controls overlay (D-pad left, analog pad right)
-        val controlsScene = scene("controls") {
-            camera = OrthographicCamera().apply {
-                isKeepAspectRatio = false
-                left = 0f
-                right = 1344f  // approximate screen width
-                bottom = 2992f // approximate screen height (flipped)
-                top = 0f
-                clipNear = -1f
-                clipFar = 1f
-            }
-
-            // D-pad background (bottom-left)
-            addColorMesh {
-                generate {
-                    color = Color(0.2f, 0.2f, 0.2f, 0.4f)
-                    // D-pad circle
-                    rect { origin.set(50f, 2550f, 0f); size.set(350f, 350f) }
-                    // Arrows
-                    color = Color(1f, 1f, 1f, 0.7f)
-                    // Up
-                    rect { origin.set(175f, 2560f, 0.1f); size.set(50f, 80f) }
-                    // Down
-                    rect { origin.set(175f, 2810f, 0.1f); size.set(50f, 80f) }
-                    // Left
-                    rect { origin.set(60f, 2685f, 0.1f); size.set(80f, 50f) }
-                    // Right
-                    rect { origin.set(310f, 2685f, 0.1f); size.set(80f, 50f) }
-                }
-            }
-
-            // Analog pad (bottom-right)
-            addColorMesh {
-                generate {
-                    color = Color(0.2f, 0.2f, 0.2f, 0.4f)
-                    rect { origin.set(944f, 2600f, 0f); size.set(300f, 300f) }
-                    color = Color(1f, 1f, 1f, 0.5f)
-                    // Center dot
-                    rect { origin.set(1069f, 2725f, 0.1f); size.set(50f, 50f) }
                 }
             }
         }
