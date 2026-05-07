@@ -263,7 +263,7 @@ class ZeeksGame {
             }
         }
 
-        return listOf(mainScene, controlsScene)
+        return listOf(mainScene)
     }
 
     companion object {
