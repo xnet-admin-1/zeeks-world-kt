@@ -14,21 +14,29 @@ import kotlin.math.sin
 
 class ZeeksGame {
     val world = World()
+    @Volatile var worldDirty = false
 
     fun createScene(ctx: KoolContext): Scene {
-        // Fetch and generate Zeek's neighborhood from OSM
-        val lat = 43.6121
-        val lon = -116.3915
-        val radius = 100.0 // meters
-        try {
-            println("Fetching OSM data for Zeek's neighborhood...")
-            val osmData = OsmFetcher.fetchArea(lat, lon, radius)
-            println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads, ${osmData.parks.size} parks")
-            WorldGenerator.generate(osmData, lat, lon, world)
-        } catch (e: Exception) {
-            println("OSM fetch failed: ${e.message}, using flat world")
-            world.generateFlat(50)
-        }
+        val lat = 43.6057601
+        val lon = -116.3932135
+        val radius = 100.0
+
+        // Generate flat world immediately
+        world.generateFlat(50)
+
+        // Fetch OSM in background
+        Thread {
+            try {
+                println("Fetching OSM data...")
+                val osmData = OsmFetcher.fetchArea(lat, lon, radius)
+                println("OSM: ${osmData.buildings.size} buildings, ${osmData.roads.size} roads")
+                WorldGenerator.generate(osmData, lat, lon, world)
+                GeoapifyEnricher.enrichWorld(world, lat, lon)
+                worldDirty = true
+            } catch (e: Exception) {
+                println("OSM fetch failed: ${e.message}")
+            }
+        }.start()
 
         return scene {
             val keys = mutableSetOf<Int>()
@@ -80,7 +88,7 @@ class ZeeksGame {
                 setColor(Color.WHITE, 5f)
             }
 
-            addColorMesh {
+            val worldMesh = addColorMesh {
                 generate {
                     for ((pos, chunk) in world.chunks) {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
@@ -90,6 +98,16 @@ class ZeeksGame {
                     color { vertexColor() }
                     metallic(0f)
                     roughness(0.25f)
+                }
+            }
+            onUpdate {
+                if (worldDirty) {
+                    worldDirty = false
+                    worldMesh.generate {
+                        for ((pos, chunk) in world.chunks) {
+                            ChunkMesher.buildGeometry(chunk, pos, world, this)
+                        }
+                    }
                 }
             }
         }

@@ -12,7 +12,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         koolCtx = createDefaultKoolContext()
         val game = ZeeksGame()
-        game.createScenes(koolCtx).forEach { koolCtx.scenes += it }
+        koolCtx.scenes += game.createScene(koolCtx)
         setContentView(koolCtx.surfaceView)
         koolCtx.run()
     }
