@@ -74,8 +74,16 @@ class ZeeksGame {
                 if (KEY_S in keys) { dx -= fwdX * speed; dz -= fwdZ * speed }
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
-                // Touch: two fingers = move forward
-                if (de.fabmax.kool.input.PointerInput.primaryPointer.isRightButtonDown) { dx += fwdX * speed; dz += fwdZ * speed }
+
+                // Touch: left-side drag = move in all directions
+                val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
+                if (ptr.isValid && ptr.isLeftButtonDown && ptr.pos.x < 640f) {
+                    val tdx = ptr.delta.x * 0.15f
+                    val tdz = ptr.delta.y * 0.15f
+                    // Map screen drag to world movement relative to camera
+                    dx += (rightX * tdx + fwdX * -tdz) * speed
+                    dz += (rightZ * tdx + fwdZ * -tdz) * speed
+                }
 
 
                 if (dx != 0f || dz != 0f) {
