@@ -100,9 +100,11 @@ class ZeeksGame {
                     roughness(0.25f)
                 }
             }
+            var rebuildTime = 3.0
             onUpdate {
-                if (worldDirty) {
+                if (worldDirty || (rebuildTime > 0 && Time.gameTime > rebuildTime)) {
                     worldDirty = false
+                    rebuildTime = -1.0
                     worldMesh.generate {
                         for ((pos, chunk) in world.chunks) {
                             ChunkMesher.buildGeometry(chunk, pos, world, this)
