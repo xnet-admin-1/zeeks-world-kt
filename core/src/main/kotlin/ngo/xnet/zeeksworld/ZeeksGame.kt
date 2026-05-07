@@ -104,9 +104,10 @@ class ZeeksGame {
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
                 playerY = groundY
 
-                // Camera rotation from touch (anywhere on screen that's not a button)
+                // Camera rotation from touch (ignore bottom-left D-pad area)
                 val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
-                if (ptr.isValid && ptr.isDrag) {
+                val inDpadArea = ptr.pos.x < 400f && ptr.pos.y > (2500f)
+                if (ptr.isValid && ptr.isDrag && !inDpadArea) {
                     camYaw += ptr.delta.x * 0.3f
                     camPitch = (camPitch - ptr.delta.y * 0.3f).coerceIn(10f, 80f)
                 }
