@@ -137,7 +137,7 @@ class ZeeksGame {
             }
         }
 
-        return listOf(mainScene, hud.createScene(ctx))
+        return listOf(mainScene)
     }
 
     companion object {
