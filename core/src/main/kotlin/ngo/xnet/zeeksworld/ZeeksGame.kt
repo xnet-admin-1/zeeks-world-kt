@@ -79,12 +79,12 @@ class ZeeksGame {
 
                 // Android: physical buttons
                 
-                    if (btnForward) { dx += fwdX * speed; dz += fwdZ * speed }
-                    if (btnBack) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                    if (btnForward) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                    if (btnBack) { dx += fwdX * speed; dz += fwdZ * speed }
                     if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
                     if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
-                if (dx != 0f || dz != 0f || btnJump || KEY_SPACE in keys) {
+                if (dx != 0f || dz != 0f) {
                     val t = orbit.translation
                     val newX = (t.x + dx).toFloat()
                     val newZ = (t.z + dz).toFloat()
@@ -98,10 +98,22 @@ class ZeeksGame {
                         }
                     }
 
-                    // Jump
+                    // Jump (only while held)
                     if (btnJump || KEY_SPACE in keys) groundY += 3f
 
                     orbit.setTranslation(newX, groundY, newZ)
+                } else if (btnJump || KEY_SPACE in keys) {
+                    // Jump while stationary
+                    val t = orbit.translation
+                    var groundY = 0f
+                    for (y in 15 downTo 0) {
+                        if (world.getBlock(t.x.toInt(), y, t.z.toInt()).solid) {
+                            groundY = (y + 1).toFloat()
+                            break
+                        }
+                    }
+                    groundY += 3f
+                    orbit.setTranslation(t.x.toFloat(), groundY, t.z.toFloat())
                 }
             }
 
