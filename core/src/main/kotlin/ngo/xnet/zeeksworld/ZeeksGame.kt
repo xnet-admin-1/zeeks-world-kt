@@ -61,28 +61,36 @@ class ZeeksGame {
 
             onUpdate {
                 val dt = Time.deltaT
-                val speed = 30f * dt
+                val speed = 8f * dt
                 val yawRad = Math.toRadians(orbit.horizontalRotation.toDouble()).toFloat()
                 val fwdX = -sin(yawRad)
                 val fwdZ = -cos(yawRad)
                 val rightX = cos(yawRad)
                 val rightZ = -sin(yawRad)
 
-                var dx = 0f; var dy = 0f; var dz = 0f
+                var dx = 0f; var dz = 0f
+                // Desktop: WASD
                 if (KEY_W in keys) { dx += fwdX * speed; dz += fwdZ * speed }
                 if (KEY_S in keys) { dx -= fwdX * speed; dz -= fwdZ * speed }
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
-                if (KEY_Q in keys || KEY_SHIFT in keys) { dy -= speed }
-                if (KEY_E in keys || KEY_SPACE in keys) { dy += speed }
 
-                if (dx != 0f || dy != 0f || dz != 0f) {
+
+                if (dx != 0f || dz != 0f) {
                     val t = orbit.translation
-                    orbit.setTranslation(
-                        (t.x + dx).toFloat(),
-                        (t.y + dy).toFloat(),
-                        (t.z + dz).toFloat()
-                    )
+                    val newX = (t.x + dx).toFloat()
+                    val newZ = (t.z + dz).toFloat()
+
+                    // Ground collision: find highest solid block at player position
+                    var groundY = 0f
+                    for (y in 15 downTo 0) {
+                        if (world.getBlock(newX.toInt(), y, newZ.toInt()).solid) {
+                            groundY = (y + 1).toFloat()
+                            break
+                        }
+                    }
+
+                    orbit.setTranslation(newX, groundY, newZ)
                 }
             }
 
