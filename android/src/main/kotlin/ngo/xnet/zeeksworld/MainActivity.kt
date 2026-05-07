@@ -57,7 +57,7 @@ class MainActivity : Activity() {
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { onState(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { onState(false); true }
-                    else -> false
+                    else -> true
                 }
             }
         }
