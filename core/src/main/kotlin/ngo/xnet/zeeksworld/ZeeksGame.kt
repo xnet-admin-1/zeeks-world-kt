@@ -82,12 +82,32 @@ class ZeeksGame {
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
 
-                // Android: physical buttons
-                
-                    if (btnForward) { dx -= fwdX * speed; dz -= fwdZ * speed }
-                    if (btnBack) { dx += fwdX * speed; dz += fwdZ * speed }
-                    if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
-                    if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
+                // Android: touch zones (all pointers)
+                // Bottom-left 400x400 = D-pad, everything else = camera
+                for (p in de.fabmax.kool.input.PointerInput.pointerState.pointers) {
+                    if (!p.isValid || !p.isLeftButtonDown) continue
+                    if (p.pos.x < 400f && p.pos.y > 2500f) {
+                        // D-pad zone: drag direction = movement
+                        if (p.isDrag) {
+                            val tdx = p.delta.x
+                            val tdz = p.delta.y
+                            dx += (rightX * tdx + fwdX * -tdz) * 0.02f
+                            dz += (rightZ * tdx + fwdZ * -tdz) * 0.02f
+                        }
+                    } else {
+                        // Camera zone
+                        if (p.isDrag) {
+                            camYaw += p.delta.x * 0.3f
+                            camPitch = (camPitch - p.delta.y * 0.3f).coerceIn(10f, 80f)
+                        }
+                    }
+                }
+
+                // Button state from game fields (set by Android buttons if they exist)
+                if (btnForward) { dx -= fwdX * speed; dz -= fwdZ * speed }
+                if (btnBack) { dx += fwdX * speed; dz += fwdZ * speed }
+                if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
+                if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
                 // Apply movement using player position (not orbit translation)
                 playerX += dx
@@ -104,14 +124,6 @@ class ZeeksGame {
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
                 playerY = groundY
 
-                // Camera rotation: check all pointers, use one outside D-pad area
-                for (p in de.fabmax.kool.input.PointerInput.pointerState.pointers) {
-                    if (!p.isValid || !p.isDrag) continue
-                    if (p.pos.x < 400f && p.pos.y > 2500f) continue
-                    camYaw += p.delta.x * 0.3f
-                    camPitch = (camPitch - p.delta.y * 0.3f).coerceIn(10f, 80f)
-                    break
-                }
 
                 // Position camera behind player
                 val pitchRad = Math.toRadians(camPitch.toDouble()).toFloat()
