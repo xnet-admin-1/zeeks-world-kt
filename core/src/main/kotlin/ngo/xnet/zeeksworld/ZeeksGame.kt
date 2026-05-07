@@ -78,6 +78,7 @@ class ZeeksGame {
                 // Touch: left-side drag = move in all directions
                 val ptr = de.fabmax.kool.input.PointerInput.primaryPointer
                 if (ptr.isValid && ptr.isDrag && ptr.pos.x < 640f) {
+                    ptr.consume(de.fabmax.kool.input.PointerInput.CONSUMED_ALL)
                     val tdx = ptr.delta.x * 0.02f
                     val tdz = ptr.delta.y * 0.02f
                     dx += rightX * tdx + fwdX * -tdz
