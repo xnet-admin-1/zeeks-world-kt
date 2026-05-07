@@ -16,7 +16,9 @@ class ZeeksGame {
     val world = World()
     @Volatile var worldDirty = false
 
-    fun createScene(ctx: KoolContext): Scene {
+    val hud = Hud()
+
+    fun createScenes(ctx: KoolContext): List<Scene> {
         val lat = 43.6057601
         val lon = -116.3932135
         val radius = 100.0
@@ -38,7 +40,7 @@ class ZeeksGame {
             }
         }.start()
 
-        return scene {
+        val mainScene = scene {
             val keys = mutableSetOf<Int>()
             val inputHandler = InputStack.InputHandler("fly-cam")
             inputHandler.keyboardListeners += InputStack.KeyboardListener { keyEvents, _ ->
@@ -134,6 +136,8 @@ class ZeeksGame {
                 }
             }
         }
+
+        return listOf(mainScene, hud.createScene(ctx))
     }
 
     companion object {
