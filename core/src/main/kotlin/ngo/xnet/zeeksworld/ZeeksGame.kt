@@ -19,6 +19,7 @@ class ZeeksGame {
     @Volatile var worldDirty = false
     var oliverGreeted = false
     var btnForward = false; var btnBack = false; var btnLeft = false; var btnRight = false; var btnJump = false
+    var playerX = 0f; var playerY = 0f; var playerZ = 0f
 
     val hud = Hud()
 
@@ -87,27 +88,23 @@ class ZeeksGame {
                     if (btnLeft) { dx -= rightX * speed; dz -= rightZ * speed }
                     if (btnRight) { dx += rightX * speed; dz += rightZ * speed }
 
-                // Apply movement
-                val t = orbit.translation
-                val newX = (t.x + dx).toFloat()
-                val newZ = (t.z + dz).toFloat()
+                // Apply movement using player position (not orbit translation)
+                playerX += dx
+                playerZ += dz
 
-                // Ground collision: always snap to ground
+                // Ground collision
                 var groundY = 0f
                 for (y in 15 downTo 0) {
-                    if (world.getBlock(newX.toInt(), y, newZ.toInt()).solid) {
+                    if (world.getBlock(playerX.toInt(), y, playerZ.toInt()).solid) {
                         groundY = (y + 1).toFloat()
                         break
                     }
                 }
-
-                // Jump: lift while held
                 if (btnJump || KEY_SPACE in keys) groundY += 3f
+                playerY = groundY
 
-                // Only update translation if position changed (avoids interrupting orbit drag)
-                if (dx != 0f || dz != 0f || groundY != t.y.toFloat() || btnJump || KEY_SPACE in keys) {
-                    orbit.setTranslation(newX, groundY, newZ)
-                }
+                // Move orbit pivot to player (doesn't interrupt drag)
+                orbit.translation.set(playerX.toDouble(), playerY.toDouble(), playerZ.toDouble())
             }
 
             lighting.singleDirectionalLight {
@@ -161,17 +158,15 @@ class ZeeksGame {
             }
 
             onUpdate {
-                val t = orbit.translation
                 val yaw = orbit.verticalRotation.toFloat()
                 playerMesh.transform.setIdentity()
-                    .translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
+                    .translate(playerX, playerY, playerZ)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
-                // Oliver offset behind player based on camera direction
                 val oRad = Math.toRadians((yaw + 150.0)).toFloat()
-                val ox = t.x.toFloat() + sin(oRad) * 3f
-                val oz = t.z.toFloat() + cos(oRad) * 3f
+                val ox = playerX + sin(oRad) * 3f
+                val oz = playerZ + cos(oRad) * 3f
                 oliverMesh.transform.setIdentity()
-                    .translate(ox, t.y.toFloat(), oz)
+                    .translate(ox, playerY, oz)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
 
                 // Oliver speaks once on first movement
