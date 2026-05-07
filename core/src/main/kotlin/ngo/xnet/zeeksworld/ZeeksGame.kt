@@ -74,6 +74,8 @@ class ZeeksGame {
                 if (KEY_S in keys) { dx -= fwdX * speed; dz -= fwdZ * speed }
                 if (KEY_A in keys) { dx -= rightX * speed; dz -= rightZ * speed }
                 if (KEY_D in keys) { dx += rightX * speed; dz += rightZ * speed }
+                // Touch: two fingers = move forward
+                if (de.fabmax.kool.input.PointerInput.primaryPointer.isRightButtonDown) { dx += fwdX * speed; dz += fwdZ * speed }
 
 
                 if (dx != 0f || dz != 0f) {
