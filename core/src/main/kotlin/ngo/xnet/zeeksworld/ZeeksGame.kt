@@ -110,7 +110,7 @@ class ZeeksGame {
 
             val worldMesh = addColorMesh {
                 generate {
-                    for ((pos, chunk) in world.chunks) {
+                    for ((pos, chunk) in world.chunks.toMap()) {
                         ChunkMesher.buildGeometry(chunk, pos, world, this)
                     }
                 }
@@ -175,7 +175,7 @@ class ZeeksGame {
                     rebuilds++
                     rebuildTime = Time.gameTime + 3.0
                     worldMesh.generate {
-                        for ((pos, chunk) in world.chunks) {
+                        for ((pos, chunk) in world.chunks.toMap()) {
                             ChunkMesher.buildGeometry(chunk, pos, world, this)
                         }
                     }
