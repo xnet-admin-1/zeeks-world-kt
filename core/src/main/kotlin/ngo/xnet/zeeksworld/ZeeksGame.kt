@@ -1,5 +1,6 @@
 package ngo.xnet.zeeksworld
 
+import de.fabmax.kool.scene.OrbitInputTransform
 import de.fabmax.kool.math.deg
 import de.fabmax.kool.KoolContext
 import de.fabmax.kool.input.InputStack
@@ -59,6 +60,8 @@ class ZeeksGame {
                 setRotation(20f, -30f)
                 setZoom(40.0)
                 setTranslation(0f, 5f, 0f)
+                rightDragMethod = OrbitInputTransform.DragMethod.NONE
+                middleDragMethod = OrbitInputTransform.DragMethod.NONE
             }
 
             onUpdate {
