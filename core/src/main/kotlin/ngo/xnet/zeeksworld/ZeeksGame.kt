@@ -15,6 +15,7 @@ import kotlin.math.sin
 class ZeeksGame {
     val world = World()
     @Volatile var worldDirty = false
+    var oliverGreeted = false
 
     val hud = Hud()
 
@@ -140,6 +141,14 @@ class ZeeksGame {
                 playerMesh.transform.setIdentity().translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
                 // Oliver follows 3 blocks behind player
                 oliverMesh.transform.setIdentity().translate(t.x.toFloat() + 3f, t.y.toFloat(), t.z.toFloat() + 2f)
+
+                // Oliver speaks once on first movement
+                if (!oliverGreeted && (t.x != 0.0 || t.z != 0.0)) {
+                    oliverGreeted = true
+                    OliverLlm.generateResponse("Zeek just started exploring the neighborhood! Greet him.") { response ->
+                        println("[Oliver] $response")
+                    }
+                }
             }
             var rebuildTime = 3.0
             onUpdate {
