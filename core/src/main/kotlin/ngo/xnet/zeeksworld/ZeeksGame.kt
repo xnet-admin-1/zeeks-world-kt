@@ -157,7 +157,7 @@ class ZeeksGame {
                     cube { origin.set(0.45f, -swing * 0.5f, 0f); size.set(0.35f, 1f, 0.4f) }
                     // Body
                     color = Color(0.5f, 0.2f, 0.8f, 1f)
-                    cube { origin.set(0f, 1f, 0f); size.set(0.8f, 1.5f, 0.5f) }
+                    cube { origin.set(0.05f, 1f, 0f); size.set(0.7f, 1.5f, 0.5f) }
                     // Left arm
                     color = Color(0.9f, 0.7f, 0.5f, 1f)
                     cube { origin.set(-0.35f, 1.2f + (-swing * 0.3f), 0f); size.set(0.25f, 1f, 0.25f) }
@@ -176,7 +176,7 @@ class ZeeksGame {
                 val ox = px + sin(oRad) * 3f
                 val oz = pz + cos(oRad) * 3f
                 val oSwing = if (moved) sin(walkPhase * 1.3f) * 0.3f else 0f
-                val tailWag = sin(Time.gameTime.toFloat() * 3f) * 0.3f
+                
 
                 oliverMesh.generate {
                     // Body
@@ -198,7 +198,7 @@ class ZeeksGame {
                     cube { origin.set(0.4f, 1.15f, 1.0f); size.set(0.15f, 0.2f, 0.1f) }
                     // Tail (wagging)
                     color = Color(1f, 0.6f, 0.2f, 1f)
-                    cube { origin.set(0.2f + tailWag * 0.3f, 0.8f, -0.7f); size.set(0.15f, 0.15f, 0.6f) }
+                    cube { origin.set(0.2f, 0.8f, -0.7f); size.set(0.15f, 0.15f, 0.6f) }
                 }
                 oliverMesh.transform.setIdentity()
                     .translate(ox, py, oz)

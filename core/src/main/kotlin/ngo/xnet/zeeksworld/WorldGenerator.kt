@@ -54,7 +54,7 @@ object WorldGenerator {
 
         // Buildings
         for (b in osm.buildings) {
-            val height = b.height.roundToInt().coerceIn(3, 5)
+            val height = (b.height * 2).roundToInt().coerceIn(6, 10)
             for (i in 0 until b.outline.size - 1) {
                 val (x0, z0) = toBlock(b.outline[i])
                 val (x1, z1) = toBlock(b.outline[i + 1])
@@ -91,9 +91,10 @@ object WorldGenerator {
     }
 
     private fun placeTree(world: World, x: Int, z: Int) {
-        world.setBlock(x, 1, z, Block.WOOD)
-        world.setBlock(x, 2, z, Block.WOOD)
-        for (dx in -1..1) for (dz in -1..1) world.setBlock(x + dx, 3, z + dz, Block.LEAF)
+        for (y in 1..6) world.setBlock(x, y, z, Block.WOOD)
+        for (dy in 0..2) for (dx in -2..2) for (dz in -2..2) {
+            if (dx*dx + dz*dz <= 5) world.setBlock(x + dx, 7 + dy, z + dz, Block.LEAF)
+        }
     }
 
     private fun plotLine(x0: Int, z0: Int, x1: Int, z1: Int, fn: (Int, Int) -> Unit) {
