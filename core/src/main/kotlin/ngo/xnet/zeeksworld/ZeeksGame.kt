@@ -126,49 +126,82 @@ class ZeeksGame {
             }
 
             val playerMesh = addColorMesh("player") {
-                generate {
-                    // Legs (blue)
-                    color = Color(0.2f, 0.3f, 0.7f, 1f)
-                    cube { origin.set(0f, 0f, 0f); size.set(0.8f, 1f, 0.8f) }
-                    // Body (purple)
-                    color = Color(0.5f, 0.2f, 0.8f, 1f)
-                    cube { origin.set(0f, 1f, 0f); size.set(0.8f, 1f, 0.8f) }
-                    cube { origin.set(0f, 2f, 0f); size.set(0.8f, 1f, 0.8f) }
-                    // Head (skin)
-                    color = Color(0.9f, 0.7f, 0.5f, 1f)
-                    cube { origin.set(0f, 3f, 0f); size.set(0.8f, 1f, 0.8f) }
-                }
+                generate { }
                 shader = KslPbrShader { color { vertexColor() } }
             }
 
-            // Oliver the cat (orange, 3 blocks tall, offset from player)
             val oliverMesh = addColorMesh("oliver") {
-                generate {
-                    color = Color(1f, 0.6f, 0.2f, 1f) // orange body
-                    cube { origin.set(0f, 0f, 0f); size.set(0.8f, 1f, 1.2f) }
-                    color = Color(1f, 0.7f, 0.3f, 1f) // head
-                    cube { origin.set(0f, 1f, 0.1f); size.set(0.7f, 0.7f, 0.7f) }
-                    color = Color(1f, 0.5f, 0.1f, 1f) // ears
-                    cube { origin.set(0f, 1.6f, 0.1f); size.set(0.2f, 0.3f, 0.2f) }
-                    cube { origin.set(0.5f, 1.6f, 0.1f); size.set(0.2f, 0.3f, 0.2f) }
-                    color = Color(1f, 0.6f, 0.2f, 1f) // tail
-                    cube { origin.set(0.2f, 0.5f, -0.8f); size.set(0.2f, 0.2f, 0.8f) }
-                }
+                generate { }
                 shader = KslPbrShader { color { vertexColor() } }
             }
+
+            var lastPx = 0f; var lastPz = 0f; var walkPhase = 0f
 
             onUpdate {
                 val t = orbit.translation
                 val yaw = orbit.verticalRotation.toFloat()
+                val px = t.x.toFloat(); val pz = t.z.toFloat(); val py = t.y.toFloat()
+
+                // Walk animation phase
+                val moved = (px - lastPx) * (px - lastPx) + (pz - lastPz) * (pz - lastPz) > 0.0001f
+                if (moved) walkPhase += Time.deltaT * 8f else walkPhase = 0f
+                lastPx = px; lastPz = pz
+                val swing = if (moved) sin(walkPhase) * 0.4f else 0f
+
+                // Rebuild player with animated limbs
+                playerMesh.generate {
+                    // Left leg
+                    color = Color(0.2f, 0.3f, 0.7f, 1f)
+                    cube { origin.set(-0.1f, swing * 0.5f, 0f); size.set(0.35f, 1f, 0.4f) }
+                    // Right leg
+                    cube { origin.set(0.45f, -swing * 0.5f, 0f); size.set(0.35f, 1f, 0.4f) }
+                    // Body
+                    color = Color(0.5f, 0.2f, 0.8f, 1f)
+                    cube { origin.set(0f, 1f, 0f); size.set(0.8f, 1.5f, 0.5f) }
+                    // Left arm
+                    color = Color(0.9f, 0.7f, 0.5f, 1f)
+                    cube { origin.set(-0.35f, 1.2f + (-swing * 0.3f), 0f); size.set(0.25f, 1f, 0.25f) }
+                    // Right arm
+                    cube { origin.set(0.9f, 1.2f + (swing * 0.3f), 0f); size.set(0.25f, 1f, 0.25f) }
+                    // Head
+                    color = Color(0.9f, 0.7f, 0.5f, 1f)
+                    cube { origin.set(0.05f, 2.5f, 0f); size.set(0.7f, 0.7f, 0.7f) }
+                }
                 playerMesh.transform.setIdentity()
-                    .translate(t.x.toFloat(), t.y.toFloat(), t.z.toFloat())
+                    .translate(px, py, pz)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
-                // Oliver offset behind player based on camera direction
+
+                // Oliver with animated legs + tail
                 val oRad = Math.toRadians((yaw + 150.0)).toFloat()
-                val ox = t.x.toFloat() + sin(oRad) * 3f
-                val oz = t.z.toFloat() + cos(oRad) * 3f
+                val ox = px + sin(oRad) * 3f
+                val oz = pz + cos(oRad) * 3f
+                val oSwing = if (moved) sin(walkPhase * 1.3f) * 0.3f else 0f
+                val tailWag = sin(Time.gameTime.toFloat() * 3f) * 0.3f
+
+                oliverMesh.generate {
+                    // Body
+                    color = Color(1f, 0.6f, 0.2f, 1f)
+                    cube { origin.set(0f, 0.5f, 0f); size.set(0.6f, 0.6f, 1.0f) }
+                    // Front legs
+                    color = Color(1f, 0.55f, 0.15f, 1f)
+                    cube { origin.set(0f, oSwing * 0.2f, 0.7f); size.set(0.15f, 0.5f, 0.15f) }
+                    cube { origin.set(0.45f, -oSwing * 0.2f, 0.7f); size.set(0.15f, 0.5f, 0.15f) }
+                    // Back legs
+                    cube { origin.set(0f, -oSwing * 0.2f, -0.1f); size.set(0.15f, 0.5f, 0.15f) }
+                    cube { origin.set(0.45f, oSwing * 0.2f, -0.1f); size.set(0.15f, 0.5f, 0.15f) }
+                    // Head
+                    color = Color(1f, 0.7f, 0.3f, 1f)
+                    cube { origin.set(0.05f, 0.7f, 0.9f); size.set(0.5f, 0.5f, 0.5f) }
+                    // Ears
+                    color = Color(1f, 0.5f, 0.1f, 1f)
+                    cube { origin.set(0.05f, 1.15f, 1.0f); size.set(0.15f, 0.2f, 0.1f) }
+                    cube { origin.set(0.4f, 1.15f, 1.0f); size.set(0.15f, 0.2f, 0.1f) }
+                    // Tail (wagging)
+                    color = Color(1f, 0.6f, 0.2f, 1f)
+                    cube { origin.set(0.2f + tailWag * 0.3f, 0.8f, -0.7f); size.set(0.15f, 0.15f, 0.6f) }
+                }
                 oliverMesh.transform.setIdentity()
-                    .translate(ox, t.y.toFloat(), oz)
+                    .translate(ox, py, oz)
                     .rotate(yaw.deg, Vec3f.Y_AXIS)
 
                 // Oliver speaks once on first movement
