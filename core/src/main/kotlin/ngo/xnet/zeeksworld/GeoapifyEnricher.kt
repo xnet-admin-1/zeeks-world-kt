@@ -5,7 +5,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object GeoapifyEnricher {
-    private const val API_KEY = "dff28ab1ea75480a8aadef9fb13c773f"
+    private val API_KEY = BuildConfig.GEOAPIFY_KEY
     private const val BASE_URL = "https://api.geoapify.com/v2"
 
     data class PlaceInfo(

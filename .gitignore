@@ -4,3 +4,4 @@ build/
 *.jar
 *.log
 local.properties
+secrets.env
